@@ -2,7 +2,8 @@ const functions = require("firebase-functions");
 const axios = require("axios");
 const convert = require('xml-js');
 
-exports.getRssFead = functions.https.onRequest(async (request, response) => {
+exports.getRssFeed = functions.https.onRequest(async (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
   if (request.method !== 'POST') {
     response.status(400).send('Request is not a POST');
   }
@@ -22,7 +23,8 @@ exports.getRssFead = functions.https.onRequest(async (request, response) => {
   Promise
     .allSettled(rssFetchPromises)
     .then((results) => {
-      const feeds = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+      const data = results.filter(result => result.status === 'fulfilled').map(result => JSON.parse(result.value));
+      const feeds = data.flatMap(singleData => singleData.elements).flatMap(rssData => rssData.elements)
       response.status(200).send(feeds)
     });
 });
